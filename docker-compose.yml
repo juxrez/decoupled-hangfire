@@ -1,0 +1,48 @@
+version: '3.4'
+
+networks:
+  hangfire:
+
+services:
+  sql-server: 
+    container_name: sql-db
+    image: mcr.microsoft.com/mssql/server:2022-CU10-ubuntu-22.04
+    ports:
+        - 1433:1433
+    environment:
+        - ACCEPT_EULA=Y
+        - SA_PASSWORD=Password01!
+        - SA_USER=sa    
+        - MSSQL_PID=Evaluation
+    networks:
+        - hangfire
+
+  samplewebapi:
+    image: ${DOCKER_REGISTRY-}samplewebapi
+    build:
+      context: .
+      dockerfile: SampleWebAPI/Dockerfile
+    networks:
+        - hangfire
+    depends_on: 
+       - jobprocessor 
+    
+  jobprocessor:
+    image: ${DOCKER_REGISTRY-}samplewebapi
+    build: 
+        context: .
+        dockerfile: JobProcessor/Dockerfile
+    networks:
+        - hangfire
+    depends_on: 
+       - sql-server
+
+  jobprocessor2:
+    image: ${DOCKER_REGISTRY-}samplewebapi
+    build: 
+        context: .
+        dockerfile: JobProcessor2/Dockerfile
+    networks:
+        - hangfire
+    depends_on: 
+       - sql-server
